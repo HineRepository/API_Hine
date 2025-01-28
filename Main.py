@@ -19,13 +19,23 @@ app.config.from_object(Config)
 # initialize the app with the extension
 db.init_app(app)
 
-
-@app.route("/aziende")
+# esempio chiamata
+#http://127.0.0.1:5000/aziende
+@app.route("/aziende", methods=['GET'])
 def aziende_list():
     aziende = db.session.execute(db.select(Azienda).order_by(Azienda.Azienda)).scalars()
     aziende_list = [Azienda.toJson(azienda) for azienda in aziende]
     return jsonify(aziende_list)
 
+# Endpoint per ottenere un singolo elemento per ID
+# esempio chiamata
+#http://127.0.0.1:5000/aziende/Id/AT
+@app.route('/aziende/Id/<string:azienda_id>', methods=['GET'])
+def azienda_By_Id(azienda_id):
+    aziende = db.session.execute(db.select(Azienda).where(Azienda.Id == azienda_id)).scalars() 
+    aziende_list = [Azienda.toJson(azienda) for azienda in aziende]
+    return jsonify(aziende_list)
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
