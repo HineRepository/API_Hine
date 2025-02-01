@@ -10,8 +10,8 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class=Base)
 
 class Veicolo(db.Model):
-    __tablename__ = 'geve_veicoli'
-    __table_args__ = {'schema': 'bi'}
+    __tablename__ = 'api_veicoli'
+    __table_args__ = {'schema': 'api'}
 
     dim_veicolo: Mapped[str] = mapped_column(primary_key=True)
     azienda_veicolo: Mapped[str] = mapped_column()
@@ -33,7 +33,7 @@ class Veicolo(db.Model):
     linea_veicolo: Mapped[str] = mapped_column()
 
     def toJson(self):
-        return {"id": self.dim_veicolo,
+        return {"id_veicolo": self.dim_veicolo,
             "azienda": self.azienda_veicolo,
             "id_veicolo_gestionale": self.id_gesionale_veicolo,
             "vin": self.telaio_veicolo,
