@@ -1,4 +1,6 @@
 
+
+
 import os
 from flask import Flask, json, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -99,4 +101,4 @@ def contratto_By_Id(idContratto):
 
 if __name__ == '__main__':
     
-    app.run(debug=False)
+    app.run(debug=True)
