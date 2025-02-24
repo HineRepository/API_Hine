@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from DatabaseMapping.Views.VeicoloMap import Veicolo
 from DatabaseMapping.Views.ContrattoMap import Contratto
 from Config import Config
-
+from apiflask import APIFlask, HTTPTokenAuth
 #---------Logging---Inizio----------------
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -24,24 +24,30 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 # -------  Logging---Fine--------------------
 
-
-
 class Base(DeclarativeBase):
   pass
 
 db = SQLAlchemy(model_class=Base)
 
-# create the app
-app = Flask(__name__)
-app.config.from_object(Config)
+app = APIFlask(__name__)
+auth = HTTPTokenAuth(scheme='Bearer')
 
+app.config.from_object(Config)
 # initialize the app with the extension
 db.init_app(app)
+
+
+@auth.verify_token
+def verify_token(token):
+    if token == Config.API_KEY:
+        return True
+    return False
 
 #==================================================VEICOLO===============================================
 # esempio chiamata
 #http://127.0.0.1:5000/veicoli/vin/ZFA16900001091537
 @app.route('/veicoli/vin/<string:vin>', methods=['GET'])
+@auth.login_required
 def veicoli_By_Vin(vin):
     logger.info(f"veicoli_By_Vin - {vin}")
     result = db.session.execute(db.select(Veicolo).where(Veicolo.telaio_veicolo == vin)).scalars() 
@@ -51,6 +57,7 @@ def veicoli_By_Vin(vin):
 # esempio chiamata
 #http://127.0.0.1:5000/veicoli/targa/EX858RN
 @app.route('/veicoli/targa/<string:targa>', methods=['GET'])
+@auth.login_required
 def veicoli_By_Targa(targa):
     logger.info(f"veicoli_By_Targa - {targa}")
     result = db.session.execute(db.select(Veicolo).where(Veicolo.targa_veicolo == targa)).scalars() 
@@ -64,6 +71,7 @@ def veicoli_By_Targa(targa):
 # esempio chiamata
 #http://127.0.0.1:5000/contratti/vin/ZFA16900001091537
 @app.route('/contratti/vin/<string:vin>', methods=['GET'])
+@auth.login_required
 def contratti_By_Vin(vin):
     logger.info(f"contratti_By_Vin - {vin}")
     result = db.session.execute(db.select(Contratto).where(Contratto.telaio_contratto == vin)).scalars() 
@@ -73,6 +81,7 @@ def contratti_By_Vin(vin):
 # esempio chiamata
 #http://127.0.0.1:5000/contratti/targa/EX858RN
 @app.route('/contratti/targa/<string:targa>', methods=['GET'])
+@auth.login_required
 def contratti_By_Targa(targa):
     logger.info(f"contratti_By_Targa - {targa}")
     result = db.session.execute(db.select(Contratto).where(Contratto.targa_contratto == targa)).scalars() 
@@ -82,6 +91,7 @@ def contratti_By_Targa(targa):
 # esempio chiamata
 #http://127.0.0.1:5000/contratti/cliente/ragionesociale
 @app.route('/contratti/cliente/<string:ragionesociale>', methods=['GET'])
+@auth.login_required
 def contratti_By_Cliente(ragionesociale):
     logger.info(f"contratti_By_Cliente - {ragionesociale}")
     result = db.session.execute(db.select(Contratto).where(Contratto.cliente_contratto.contains(ragionesociale))).scalars() 
@@ -91,6 +101,7 @@ def contratti_By_Cliente(ragionesociale):
 # esempio chiamata
 #http://127.0.0.1:5000/contratti/id/idContratto
 @app.route('/contratti/id/<string:idContratto>', methods=['GET'])
+@auth.login_required
 def contratto_By_Id(idContratto):
     logger.info(f"contratto_By_Id - {idContratto}")
     result = db.session.execute(db.select(Contratto).where(Contratto.dim_contratto == idContratto)).scalars() 
@@ -102,3 +113,8 @@ def contratto_By_Id(idContratto):
 if __name__ == '__main__':
     
     app.run(debug=True)
+
+
+
+
+
