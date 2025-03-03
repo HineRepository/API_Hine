@@ -1,0 +1,4 @@
+{
+    "Key1": "[\n    {\n        \"azienda\": \"A9\",\n        \"cognome_utilizzatore\": \"Minossi\",\n        \"data_affidamento\": \"2025-03-06T15:11:00Z\",\n        \"data_restituzione\": \"2025-05-25T07:00:00Z\",\n        \"email_utilizzatore\": \"carlo@minossi.com\",\n        \"id\": 1,\n        \"nome_utilizzatore\": \"Carlo\",\n        \"targa\": \"FF785GZ\"\n    }\n]",
+    "Key3": "[]"
+}

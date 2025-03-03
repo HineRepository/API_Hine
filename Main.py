@@ -1,20 +1,32 @@
 
 
 
+import datetime
 import os
-from flask import Flask, json, jsonify
+import sys
+from flask import Flask, Response, json, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Integer, String
+from sqlalchemy import Integer, String, and_
 from sqlalchemy.orm import Mapped, mapped_column
 from DatabaseMapping.Views.VeicoloMap import Veicolo
 from DatabaseMapping.Views.ContrattoMap import Contratto
+from DatabaseMapping.Tables.ApiKeyMap import ApiKeyAuth
 from Config import Config
 from apiflask import APIFlask, HTTPTokenAuth
+currentDirectory =  os.path.dirname(os.path.realpath(__file__))
+hineUtilsPath=os.path.abspath(os.path.join(currentDirectory, os.pardir))+"\\HineUtils"
+sys.path.append(hineUtilsPath)
+from HineSharePointHandler import SharepointHandler
+
+
+
 #---------Logging---Inizio----------------
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from logging import Formatter
+
+
 currentDirectory =  os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger("API_Hine")
 handler = TimedRotatingFileHandler(filename=currentDirectory+'\\API_Hine.log', when='D', interval=2, backupCount=5, encoding='utf-8', delay=False)
@@ -39,8 +51,15 @@ db.init_app(app)
 
 @auth.verify_token
 def verify_token(token):
-    if token == Config.API_KEY:
-        return True
+    validApiKey = db.session.execute(db.select(ApiKeyAuth.AppKey).where(and_(
+                ApiKeyAuth.AppKey == token,
+                ApiKeyAuth.ExpirationDate >= datetime.datetime.now()
+            ))).scalars().all()
+    
+    if validApiKey != None and len(validApiKey) > 0:
+        if token == validApiKey[0]:
+            return True
+    
     return False
 
 #==================================================VEICOLO===============================================
@@ -109,10 +128,38 @@ def contratto_By_Id(idContratto):
     return jsonify(resultToJson)
 
 
+#TODO aggiungere azienda a lista, duplicare liste e attuare controllo su altre aziende
+# esempio chiamata
+#http://127.0.0.1:5000/veicoli_aziendali/targa/FF785GZ
+@app.route('/veicoli_aziendali/targa/<string:targa>', methods=['GET'])
+@auth.login_required
+def veicoli_aziendali_By_Targa(targa):
+    logger.info(f"veicoli_aziendali_By_Targa - {targa}")    
+    sharepointHandler = SharepointHandler()
+
+    listaJson = []
+    result = sharepointHandler.GetVeicoliUsoAziendaleByTarga('Vetture uso aziendale - Autoteam',targa)
+    listaJson.append(json.loads(result))
+
+    result = sharepointHandler.GetVeicoliUsoAziendaleByTarga('Vetture uso aziendale - Autoteam9',targa)
+    listaJson.append(json.loads(result))
+
+    result = sharepointHandler.GetVeicoliUsoAziendaleByTarga('Vetture uso aziendale - Gruppo Ferrari',targa)
+    listaJson.append(json.loads(result))
+
+    print(json.dumps(listaJson, indent=4, sort_keys=True, ensure_ascii=False))
+    
+    return jsonify(json.dumps(listaJson, indent=4, sort_keys=True, ensure_ascii=False))
+    
+
+
+
+
+
+
 
 if __name__ == '__main__':
-    
-    app.run(debug=True)
+    app.run(debug=Config.DEBUG)
 
 
 
